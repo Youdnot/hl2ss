@@ -40,7 +40,7 @@ shared = False
 # Ignored in shared mode
 width     = 1920
 height    = 1080
-framerate = 30
+framerate = 5    # 30
 
 # Video encoding profile and bitrate (None = default)
 profile = hl2ss.VideoProfile.H265_MAIN
