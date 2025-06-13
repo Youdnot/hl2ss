@@ -25,7 +25,7 @@ profile = hl2ss.VideoProfile.H265_MAIN
 bitrate = None
 decoded_format = 'bgr24'
 
-def calculate_saliency_map(image):
+def calculate_saliency_map(image, method='static'):
     """
     Calculate saliency map using OpenCV's Static Saliency Spectral Residual
     """
@@ -33,7 +33,20 @@ def calculate_saliency_map(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
     # Create saliency object
-    saliency = cv2.saliency.StaticSaliencySpectralResidual_create()
+    if method == 'static':
+        saliency = cv2.saliency.StaticSaliencySpectralResidual_create()
+    elif method == 'static_fine_grained':
+        saliency = cv2.saliency.StaticSaliencyFineGrained_create()
+    # elif method == 'objectness':
+    #     saliency = cv2.saliency.ObjectnessBING_create()
+    #     saliency.setTrainingPath(training_path)	# 提取模型文件参数
+    #     saliency.setBBResDir("Results")	# 将算法检测结果保存在Results文件夹内
+    # elif method == 'motion':
+    #     saliency = cv2.saliency.MotionSaliencyBinWangApr2014_create()
+    #     saliency.setImagesize(image.shape[1], image.shape[0])   # 设置图像大小
+    #     saliency.init() # 初始化
+    else:
+        raise ValueError(f"Invalid method: {method}")
     
     # Calculate saliency map
     success, saliency_map = saliency.computeSaliency(gray)
@@ -69,19 +82,21 @@ def main():
             
             # Get image and calculate saliency
             image = data.payload.image
-            saliency_map = calculate_saliency_map(image)
-            
+            saliency_map = calculate_saliency_map(image, method='static')
+            saliency_map_fine_grained = calculate_saliency_map(image, method='static_fine_grained')
+
             if saliency_map is not None:
                 # Resize images for better display
                 display_size = (960, 540)
                 image_resized = cv2.resize(image, display_size)
                 saliency_resized = cv2.resize(saliency_map, display_size)
+                saliency_resized_fine_grained = cv2.resize(saliency_map_fine_grained, display_size)
                 
                 # Combine images side by side
-                combined = np.hstack((image_resized, saliency_resized))
+                combined = np.hstack((image_resized, saliency_resized, saliency_resized_fine_grained))
                 
                 # Display
-                cv2.imshow('Original | Saliency Map', combined)
+                cv2.imshow('Original | Saliency Map | Saliency Map Fine Grained', combined)
                 cv2.waitKey(1)
             
     finally:
